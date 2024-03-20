@@ -45,6 +45,9 @@ internal class Program
                 var readCount = sr.ReadBlock(result, 0, charLimit);
                 System.Console.WriteLine(result.Length);
 
+                // Split this into 1GB chunks, then merge it together
+                // instead of trying to do it all at once.
+
                 for (int i = 0; i < readCount; i++)
                 {
                     builder.Append(result[i]);
