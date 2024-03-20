@@ -1,49 +1,72 @@
 ﻿using System.Text;
-using Station;
+using OneBillionLines.Classes;
+using OneBillionLines.Station;
 
-var startTime = DateTime.Now;
-var stationFile = new StationFile();
-await stationFile.CreateFile(1_000_000_000);
-var endTime = DateTime.Now;
-var timeElapsed = endTime - startTime;
-Console.WriteLine("It took {0:c} to complete", timeElapsed);
+namespace OneBillionLines;
 
-char[] result;
-StringBuilder builder = new();
-int charLimit = 1024 * 1024 * 1024; // 1GB
-
-FileStream fs = null!;
-try
+internal class Program
 {
-    startTime = DateTime.Now;
-    fs = new FileStream("./measurements.txt", FileMode.Open, FileAccess.Read, FileShare.None);
-    using StreamReader sr = new(fs);
+    internal static WeatherStationCalcs[] MAX_STATIONS = new WeatherStationCalcs[413];
 
-    fs = null!;
-    result = new char[charLimit];
-
-    for (int s = 1; s <= 13; s++)
+    static void Main(string[] args)
     {
-        var some = await sr.ReadBlockAsync(result, 0, charLimit);
+        var startTime = DateTime.Now;
+        var stationFile = new StationFile();
+        stationFile.CreateFile(1_000_000_000);
+        var endTime = DateTime.Now;
+        var timeElapsed = endTime - startTime;
+        Console.WriteLine("It took {0:c} to complete", timeElapsed);
 
-        for (int i = 0; i < some; i++)
+        char[] result;
+        StringBuilder builder = new();
+        int charLimit = 1024 ^ 3; // 1024 * 1024; // 1GB
+
+        FileStream fs = null!;
+        try
         {
-            if (char.IsLetterOrDigit(result[i]) || char.IsWhiteSpace(result[i]))
+            startTime = DateTime.Now;
+            fs = new FileStream(
+                "./measurements.txt",
+                FileMode.Open,
+                FileAccess.Read,
+                FileShare.None
+            );
+            using StreamReader sr = new(fs);
+
+            fs = null!;
+            result = new char[charLimit];
+
+            for (int s = 1; s <= 13; s++)
             {
-                builder.Append(result[i]);
+                var readCount = sr.ReadBlock(result, 0, charLimit);
+
+                for (int i = 0; i < readCount; i++)
+                {
+                    builder.Append(result[i]);
+                    if (result[i] == '\n')
+                    {
+                        // Doesn't allocate more on the heap
+                        Span<char> line = builder.ToString().ToCharArray();
+                        // Clear builder since I don't need it anymore
+                        builder.Clear();
+                        // Get Index where it splits between name and measurement
+                        int splitIndex = line.IndexOf(';');
+                        // Gets name
+                        var id = line[..(splitIndex - 1)];
+                        // Gets Measurement
+                        var measurement = float.Parse(line[(splitIndex + 1)..]);
+                    }
+                }
+                Array.Clear(result);
             }
+
+            endTime = DateTime.Now;
+            timeElapsed = endTime - startTime;
         }
-        Console.WriteLine(builder.Length);
-        builder.Clear();
+        finally
+        {
+            Console.WriteLine("It took {0:c} to complete", timeElapsed);
+            fs?.Dispose();
+        }
     }
-
-    endTime = DateTime.Now;
-    timeElapsed = endTime - startTime;
-
-    // Console.WriteLine(builder.ToString());
-}
-finally
-{
-    Console.WriteLine("It took {0:c} to complete", timeElapsed);
-    fs?.Dispose();
 }
