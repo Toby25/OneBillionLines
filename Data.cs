@@ -1,4 +1,6 @@
-namespace Sample;
+using OneBillionLines.Classes;
+
+namespace OneBillionLines.Sample;
 
 public static class FileData
 {

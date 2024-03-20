@@ -1,16 +1,17 @@
-using Sample;
+using OneBillionLines.Sample;
 
-namespace Station;
+namespace OneBillionLines.Station;
 
 public class StationFile(string fileName = "./measurements.txt")
 {
     public string FileName { get; set; } = fileName;
 
-    public async Task CreateFile(double lineCount)
+    public void CreateFile(double lineCount)
     {
-        var random = new Random();
         if (File.Exists(FileName))
             return;
+
+        var random = new Random();
 
         using StreamWriter streamWriter = new(FileName);
 
@@ -18,7 +19,7 @@ public class StationFile(string fileName = "./measurements.txt")
         {
             var randLine = random.Next(412);
             var randomStation = FileData.Stations.ElementAt(randLine);
-            await streamWriter.WriteAsync($"{randomStation.Id};{randomStation.Measurement}\n");
+            streamWriter.Write($"{randomStation.Id};{randomStation.Measurement}\n");
         }
     }
 }
