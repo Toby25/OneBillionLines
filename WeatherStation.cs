@@ -19,15 +19,21 @@ public record struct WeatherStation(string Id, double Mean)
     }
 }
 
-public record struct WeatherStationCalcs(string Id, double Measurement)
+public class WeatherStationCalcs(string id)
 {
-    public List<WeatherStation> WeatherData { get; set; }
-    public readonly double Min => WeatherData.Min((i) => i.Mean);
-    public readonly double Mean => WeatherData.Average((i) => i.Mean);
-    public readonly double Max => WeatherData.Max((i) => i.Mean);
+    private List<WeatherStation> WeatherData { get; } = [];
+    public string Id { get; set; } = id;
+    public double Min => Math.Round(WeatherData.Min((i) => i.Mean), 1);
+    public double Mean => Math.Round(WeatherData.Average((i) => i.Mean), 1);
+    public double Max => Math.Round(WeatherData.Max((i) => i.Mean), 1);
 
-    public readonly void Add(WeatherStation weatherStation)
+    public void Add(WeatherStation weatherStation)
     {
         WeatherData.Add(weatherStation);
+    }
+
+    public override string ToString()
+    {
+        return $"{Id}={Min}/{Mean}/{Max}";
     }
 }

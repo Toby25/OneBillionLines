@@ -1,4 +1,6 @@
-﻿using System.Text;
+﻿using System.Security.Cryptography.X509Certificates;
+using System.Text;
+using Microsoft.CodeAnalysis;
 using OneBillionLines.Classes;
 using OneBillionLines.Station;
 
@@ -10,6 +12,8 @@ internal class Program
 
     static void Main(string[] args)
     {
+        var numOfWorkers = Environment.ProcessorCount;
+        Console.WriteLine("Processor Count: {0}", numOfWorkers);
         var startTime = DateTime.Now;
         var stationFile = new StationFile();
         stationFile.CreateFile(1_000_000_000);
@@ -19,7 +23,7 @@ internal class Program
 
         char[] result;
         StringBuilder builder = new();
-        int charLimit = 1024 ^ 3; // 1024 * 1024; // 1GB
+        int charLimit = 1024 * 1024; // 1GB
 
         FileStream fs = null!;
         try
@@ -39,6 +43,7 @@ internal class Program
             for (int s = 1; s <= 13; s++)
             {
                 var readCount = sr.ReadBlock(result, 0, charLimit);
+                System.Console.WriteLine(result.Length);
 
                 for (int i = 0; i < readCount; i++)
                 {
@@ -52,12 +57,35 @@ internal class Program
                         // Get Index where it splits between name and measurement
                         int splitIndex = line.IndexOf(';');
                         // Gets name
-                        var id = line[..(splitIndex - 1)];
+                        var id = line[..splitIndex];
                         // Gets Measurement
                         var measurement = float.Parse(line[(splitIndex + 1)..]);
+
+                        var saveId = id.ToString();
+                        WeatherStation tempStation = new(saveId, measurement);
+
+                        if (!MAX_STATIONS.Any(m => m?.Id == saveId))
+                        {
+                            var station = new WeatherStationCalcs(saveId);
+                            int mI = 0;
+                            while (MAX_STATIONS[mI] != null)
+                                mI++;
+                            MAX_STATIONS[mI] = station;
+                            MAX_STATIONS[mI].Add(tempStation);
+                        }
+                        else
+                        {
+                            var station = MAX_STATIONS.First(m => m.Id == saveId);
+                            station.Add(tempStation);
+                        }
                     }
                 }
                 Array.Clear(result);
+            }
+
+            for (int i = 0; i < MAX_STATIONS.Length; i++)
+            {
+                Console.WriteLine($"{MAX_STATIONS[i]}");
             }
 
             endTime = DateTime.Now;

@@ -1,4 +1,6 @@
 .config/*
+.vscode/*
 bin/*
 obj/*
 measurements.txt
+output.txt
