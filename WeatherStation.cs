@@ -1,7 +1,9 @@
-public record WeatherStation(string Id, double Mean)
+namespace OneBillionLines.Classes;
+
+public record struct WeatherStation(string Id, double Mean)
 {
     private readonly Random random = new();
-    public double Measurement
+    public readonly double Measurement
     {
         get
         {
@@ -14,5 +16,18 @@ public record WeatherStation(string Id, double Mean)
 
             return Math.Round(randNormal * 10.0) / 10.0;
         }
+    }
+}
+
+public record struct WeatherStationCalcs(string Id, double Measurement)
+{
+    public List<WeatherStation> WeatherData { get; set; }
+    public readonly double Min => WeatherData.Min((i) => i.Mean);
+    public readonly double Mean => WeatherData.Average((i) => i.Mean);
+    public readonly double Max => WeatherData.Max((i) => i.Mean);
+
+    public readonly void Add(WeatherStation weatherStation)
+    {
+        WeatherData.Add(weatherStation);
     }
 }
